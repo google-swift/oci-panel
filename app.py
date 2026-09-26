@@ -45,7 +45,7 @@ def sniper_loop():
         return
 
     while is_running:
-        log_message("⏳ 正在尝试创建 ARM VPS (4核 24G)...")
+        log_message("⏳ 正在尝试创建 ARM VPS (2核 12G)...")
         
         shape_config = oci.core.models.LaunchInstanceShapeConfigDetails(
             ocpus=2,
@@ -72,6 +72,7 @@ def sniper_loop():
             is_running = False # 抢到后自动停止
             break
         except oci.exceptions.ServiceError as e:
+            log_message(f"❌ 发生 OCI 服务错误: Code={e.code}, Message={e.message}")
             if "Out of host capacity" in e.message:
                 log_message("❌ 库存不足 (Out of host capacity)，30秒后重试...")
             else:
