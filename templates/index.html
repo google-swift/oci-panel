@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>OCI VPS 抢机控制面板</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h1 { font-size: 24px; margin-bottom: 10px; color: #38bdf8; }
+        .status-box { margin: 20px 0; padding: 15px; background: #334155; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .btn-start { background: #22c55e; color: white; }
+        .btn-stop { background: #ef4444; color: white; }
+        .btn:disabled { background: #64748b; cursor: not-allowed; }
+        .logs { background: #020617; padding: 15px; border-radius: 8px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 13px; color: #38bdf8; white-space: pre-wrap; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Oracle Cloud VPS 自动化抢机面板</h1>
+        <p>通过 Web 实时控制 OCI 抢机线程，随时启停。</p>
+        
+        <div class="status-box">
+            <div>
+                当前状态: <span id="status-text" style="font-weight: bold;">加载中...</span>
+            </div>
+            <div>
+                <button id="start-btn" class="btn btn-start" onclick="controlAction('start')">启动抢机</button>
+                <button id="stop-btn" class="btn btn-stop" onclick="controlAction('stop')">停止任务</button>
+            </div>
+        </div>
+
+        <h3>实时运行日志:</h3>
+        <div id="log-container" class="logs">加载日志中...</div>
+    </div>
+
+    <script>
+        function fetchStatus() {
+            fetch('/status')
+                .then(res => res.json())
+                .then(data => {
+                    const statusText = document.getElementById('status-text');
+                    if (data.is_running) {
+                        statusText.innerText = "运行中 🟢";
+                        statusText.style.color = "#22c55e";
+                    } else {
+                        statusText.innerText = "已停止 🔴";
+                        statusText.style.color = "#ef4444";
+                    }
+                    document.getElementById('log-container').innerText = data.logs.join('\n');
+                    const logContainer = document.getElementById('log-container');
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                });
+        }
+
+        function controlAction(action) {
+            fetch('/' + action, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    fetchStatus();
+                });
+        }
+
+        setInterval(fetchStatus, 2000);
+        fetchStatus();
+    </script>
+</body>
+</html>
